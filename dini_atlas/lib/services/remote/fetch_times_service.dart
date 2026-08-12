@@ -3,11 +3,11 @@ import 'package:dini_atlas/models/location_api/city.dart';
 import 'package:dini_atlas/models/location_api/country.dart';
 import 'package:dini_atlas/models/location_api/state.dart';
 import 'package:dini_atlas/models/prayer/eid_prayer.dart';
-import 'package/dini_atlas/models/prayer/prayer_time.dart';
+import 'package:dini_atlas/models/prayer/prayer_time.dart';
 import 'package:dini_atlas/models/prayer/prayer_times.dart';
 import 'package:dini_atlas/models/religious_days.dart';
 import 'package:dini_atlas/models/user_location.dart';
-import 'package:dini_atlas/models/user_setting.dart';
+import 'package0/dini_atlas/models/user_setting.dart';
 import 'package:dini_atlas/services/local/prayer_times_service.dart';
 import 'package:dini_atlas/services/local/user_settings_service.dart';
 import 'package:dini_atlas/app/app.locator.dart';
@@ -27,7 +27,6 @@ class FetchTimesService {
   final _prayerTimesService = locator<PrayerTimesService>();
   final _dio = locator<DioService>();
 
-  // Kapanan Heroku adresi yerine aktif açık API adresi
   final String _baseUrl = "https://ezanvakti.com/api";
   final String _countryUrl = "ulkeler";
   final String _cityUrl = "sehirler";
@@ -42,7 +41,6 @@ class FetchTimesService {
       UserSettings? userSettings = await _userSettings.getUserSettings();
 
       if (userSettings == null) {
-        if (kDebugMode) print("Kullanıcı ayarları bulunamadı");
         throw UserSettingsException("Kullanıcıya ait kayıtlı ayar bulunamadı.");
       }
 
