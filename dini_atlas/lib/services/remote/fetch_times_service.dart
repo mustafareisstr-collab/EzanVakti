@@ -7,7 +7,7 @@ import 'package:dini_atlas/models/prayer/prayer_time.dart';
 import 'package:dini_atlas/models/prayer/prayer_times.dart';
 import 'package:dini_atlas/models/religious_days.dart';
 import 'package:dini_atlas/models/user_location.dart';
-import 'package0/dini_atlas/models/user_setting.dart';
+import 'package:dini_atlas/models/user_setting.dart';
 import 'package:dini_atlas/services/local/prayer_times_service.dart';
 import 'package:dini_atlas/services/local/user_settings_service.dart';
 import 'package:dini_atlas/app/app.locator.dart';
