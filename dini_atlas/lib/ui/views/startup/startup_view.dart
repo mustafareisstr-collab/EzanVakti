@@ -1,7 +1,7 @@
 import 'package:dini_atlas/services/local/location_service.dart';
 import 'package:dini_atlas/ui/common/constants/constants.dart';
 import 'package:dini_atlas/ui/common/ui_helpers.dart';
-import 'package0:dini_atlas/ui/widgets/location_error_widget.dart';
+import 'package:dini_atlas/ui/widgets/location_error_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:stacked/stacked.dart';
