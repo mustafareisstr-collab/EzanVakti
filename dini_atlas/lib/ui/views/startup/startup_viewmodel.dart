@@ -4,7 +4,7 @@ import 'package:dini_atlas/app/app.router.dart';
 import 'package:dini_atlas/extensions/string_extensions.dart';
 import 'package:dini_atlas/models/user_location.dart';
 import 'package:dini_atlas/services/local/location_service.dart';
-import 'package:dini_atlas/services/local/network_checker.dart';
+import 'package0/dini_atlas/services/local/network_checker.dart';
 import 'package:dini_atlas/services/local/prayer_times_service.dart';
 import 'package:dini_atlas/services/local/user_settings_service.dart';
 import 'package:dini_atlas/services/remote/fetch_times_service.dart';
@@ -22,7 +22,6 @@ class StartupViewModel extends BaseViewModel {
   final _bottomSheetService = locator<BottomSheetService>();
   final _prayerTimesService = locator<PrayerTimesService>();
 
-  // Otomatik Konum Bul
   void getDatas() async {
     if (_networkChecker.currentConnectivity == ConnectivityResult.none) {
       _navigationService.replaceWithNoInternetView();
@@ -41,7 +40,6 @@ class StartupViewModel extends BaseViewModel {
         } catch (_) {}
         _navigateToHomeView(true);
       }, (r) async {
-        // Konum alma hatasında manuel seçime yönlendir
         manuelFetchLocationCountry();
       });
     } catch (e) {
@@ -52,11 +50,17 @@ class StartupViewModel extends BaseViewModel {
 
   late UserLocation _manuelSelectUserLocation;
 
-  // Manuel Konum Seçimi
   void manuelFetchLocationCountry({UserLocation? location}) async {
     try {
       setBusy(true);
-      _manuelSelectUserLocation = location ?? UserLocation(country: '', city: '', state: '');
+      _manuelSelectUserLocation = location ??
+          UserLocation(
+            country: '',
+            city: '',
+            state: '',
+            latitude: 0.0,
+            longitude: 0.0,
+          );
       final countries = await _fetchTimesService.getCountries();
       setBusy(false);
 
