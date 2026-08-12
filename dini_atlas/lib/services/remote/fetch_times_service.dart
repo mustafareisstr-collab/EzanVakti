@@ -3,7 +3,7 @@ import 'package:dini_atlas/models/location_api/city.dart';
 import 'package:dini_atlas/models/location_api/country.dart';
 import 'package:dini_atlas/models/location_api/state.dart';
 import 'package:dini_atlas/models/prayer/eid_prayer.dart';
-import 'package:dini_atlas/models/prayer/prayer_time.dart';
+import 'package0/dini_atlas/models/prayer/prayer_time.dart';
 import 'package:dini_atlas/models/prayer/prayer_times.dart';
 import 'package:dini_atlas/models/religious_days.dart';
 import 'package:dini_atlas/models/user_location.dart';
@@ -27,7 +27,8 @@ class FetchTimesService {
   final _prayerTimesService = locator<PrayerTimesService>();
   final _dio = locator<DioService>();
 
-  final String _baseUrl = "https://ezanvakti.herokuapp.com";
+  // Kapanan Heroku adresi yerine aktif açık API adresi
+  final String _baseUrl = "https://ezanvakti.com/api";
   final String _countryUrl = "ulkeler";
   final String _cityUrl = "sehirler";
   final String _stateUrl = "ilceler";
@@ -38,7 +39,6 @@ class FetchTimesService {
   Future<Either<PrayerTimes, FetchTimesException>> fetchTimes(
       {UserLocation? userLocation}) async {
     try {
-      // kullanıcı kayıtlı ayarlarını getir
       UserSettings? userSettings = await _userSettings.getUserSettings();
 
       if (userSettings == null) {
@@ -48,56 +48,31 @@ class FetchTimesService {
 
       bool dontFetchTimes = false;
 
-      // Daha önceden kullanıcı lokasyon id'leri çekildi mi kontrol et
       if (userSettings.city == null) {
-        if (kDebugMode) print("Kullanıcı lokasyon id'si bulunamadı");
-
-        // kullanıcı lokasyon idlerini getir
         final values = await _getLocationIds(
             UserLocation.fromIsarJson(userSettings.jsonString));
-        // modeli güncelle
         userSettings
           ..city = values.city
           ..state = values.state;
-
-        if (kDebugMode) print("Kullanıcı lokasyon id'leri çekildi");
       } else {
-        // yeni lokasyon verilmiş mi kontrol et
         if (userLocation != null) {
-          if (kDebugMode) print("Yeni lokasyon belirlendi");
           final String oldLocation = userSettings.jsonString;
           final String newLocation = jsonEncode(userLocation.toJson());
 
-          // eğer yeni lokasyon mevcut lokasyondan farklıysa tekrar lokasyon idlerini getir
           if (oldLocation != newLocation) {
-            if (kDebugMode) print("Yeni lokasyon vakitleri getiriliyor..");
-            // kullanıcı lokasyon idlerini getir
             final values = await _getLocationIds(userLocation);
-            // modeli güncelle
             userSettings
               ..city = values.city
               ..state = values.state;
           } else {
-            if (kDebugMode) {
-              print("Yeni lokasyon öncekiyle aynı. Vakitler güncellenmeyecek");
-            }
             dontFetchTimes = true;
           }
         }
       }
 
-      // Eğer aynı lokasyonda tekrar istek yapılmadıysa
       if (!dontFetchTimes) {
-        // Vakit bilgilerini getir
         final prayerTimes = await _fetchPrayerTimes(userSettings);
-
-        if (kDebugMode) print("Vakit bilgileri çekildi");
-
-        // vakit bilgilerini veritabanına kaydet
         await _prayerTimesService.setPrayerTimes(prayerTimes);
-
-        if (kDebugMode) print("Vakit bilgileri veritabanına kaydedildi");
-
         return Left(prayerTimes);
       }
       return Right(FetchTimesException("Vakitler alınırken sorun oluştu"));
@@ -108,12 +83,10 @@ class FetchTimesService {
 
   Future<PrayerTimes> _fetchPrayerTimes(UserSettings userSetting) async {
     try {
-      // vakitleri getir
       final List<PrayerTime> times = await _getTimes(userSetting.state!.ilceId);
       final EidPrayerTime eidTimes =
           await _getEidTimes(userSetting.city!, userSetting.state!.ilceId);
 
-      // nesne oluştur
       final prayerTimes = PrayerTimes()
         ..prayerTimes = times
         ..eidPrayers = eidTimes
@@ -139,21 +112,13 @@ class FetchTimesService {
     UserLocation userLocation,
   ) async {
     try {
-      // ülke idsini getirme
       final Country country = await _getUserCountry(userLocation.country);
-
-      // sehir idsini getir
       final City city = await _getUserCity(userLocation.city, country);
-
-      // ilce idsini getir
       final StateModel state = await _getUserState(
           userLocation.city, userLocation.state, city.sehirId);
 
-      // getirilen id'leri kullanıcı ayarlarına kaydet
       await _userSettings.setUserLocationSettings(
           country: country, city: city, state: state, location: userLocation);
-
-      if (kDebugMode) print("Lokasyon idleri veritabanına kaydedildi");
 
       return (city: city, state: state);
     } catch (e) {
@@ -264,7 +229,6 @@ class FetchTimesService {
       final List<PrayerTime> times =
           (response.data as List).map((e) => PrayerTime.fromJson(e)).toList();
 
-      if (kDebugMode) print("- Vakit namazları getirildi.");
       return times;
     } catch (e) {
       debugPrint("Vakitler alınırken sorun oluştu");
@@ -289,8 +253,6 @@ class FetchTimesService {
       final singleEidTime = eidTimes.singleWhere((e) =>
           e.ilceBilgisi.ilceId == stateId ||
           e.ilceBilgisi.ilceAdi == city.sehirAdi);
-
-      if (kDebugMode) print("- Bayram namazları getirildi.");
 
       return singleEidTime;
     } catch (e) {
