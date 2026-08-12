@@ -8,7 +8,6 @@ import 'package:dini_atlas/services/local/network_checker.dart';
 import 'package:dini_atlas/services/local/prayer_times_service.dart';
 import 'package:dini_atlas/services/local/user_settings_service.dart';
 import 'package:dini_atlas/services/remote/fetch_times_service.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:stacked/stacked.dart';
 import 'package:dini_atlas/app/app.locator.dart';
@@ -23,7 +22,7 @@ class StartupViewModel extends BaseViewModel {
   final _bottomSheetService = locator<BottomSheetService>();
   final _prayerTimesService = locator<PrayerTimesService>();
 
-  // Eğer veritabanına daha önce location kayıt edilmediyse, lokasyon bilgilerini al
+  // Otomatik Konum Bul
   void getDatas() async {
     if (_networkChecker.currentConnectivity == ConnectivityResult.none) {
       _navigationService.replaceWithNoInternetView();
@@ -33,94 +32,113 @@ class StartupViewModel extends BaseViewModel {
   }
 
   Future<void> _fetchUserLocationAndPrayerTimes() async {
-    final result = await _locationService.getUserLocation();
-    await result.fold((l) async {
-      await _userSettingsService.setUserLocationSettings(location: l);
-      final fetchResult = await _fetchTimesService.fetchTimes();
-      fetchResult.fold((l) => _navigateToHomeView(true), (r) {
-        manuelFetchLocationCountry(location: l);
+    try {
+      final result = await _locationService.getUserLocation();
+      await result.fold((l) async {
+        await _userSettingsService.setUserLocationSettings(location: l);
+        try {
+          await _fetchTimesService.fetchTimes();
+        } catch (_) {}
+        _navigateToHomeView(true);
+      }, (r) async {
+        // Konum alma hatasında manuel seçime yönlendir
+        manuelFetchLocationCountry();
       });
-    }, (r) async => setError(r));
+    } catch (e) {
+      setError(e.toString());
+      _navigateToHomeView(false);
+    }
   }
 
   late UserLocation _manuelSelectUserLocation;
 
-  // Konum ve vakitlerle ilgili sorun oluşursa kullanıcı konumunu kendisi seçsin
+  // Manuel Konum Seçimi
   void manuelFetchLocationCountry({UserLocation? location}) async {
-    setBusy(true);
-    if (location == null) {
-      final result = await _locationService.getUserLocation();
-      await result.fold((l) async {
-        location ??= l;
-      }, (r) async => setError(r));
-    }
-    setBusy(false);
-    if (hasError) return;
-    _manuelSelectUserLocation = location!;
-    final countries = await _fetchTimesService.getCountries();
-    final country = await _bottomSheetService.showCustomSheet(
-        variant: BottomSheetType.location,
-        barrierDismissible: false,
-        title: "Ülke Seçiniz",
-        data: countries.map((e) => e.ulkeAdiEn.capitalize()).toList());
-    if (country == null) return;
-    final selection = countries.firstWhere(
-        (e) => e.ulkeAdiEn == (country.data as String).toLowerCase());
-    _manuelSelectUserLocation.country = selection.ulkeAdiEn;
+    try {
+      setBusy(true);
+      _manuelSelectUserLocation = location ?? UserLocation(country: '', city: '', state: '');
+      final countries = await _fetchTimesService.getCountries();
+      setBusy(false);
 
-    _manuelFetchLocationCity(selection.ulkeId);
+      final country = await _bottomSheetService.showCustomSheet(
+          variant: BottomSheetType.location,
+          barrierDismissible: false,
+          title: "Ülke Seçiniz",
+          data: countries.map((e) => e.ulkeAdiEn.capitalize()).toList());
+      if (country == null) return;
+      final selection = countries.firstWhere(
+          (e) => e.ulkeAdiEn == (country.data as String).toLowerCase());
+      _manuelSelectUserLocation.country = selection.ulkeAdiEn;
+
+      _manuelFetchLocationCity(selection.ulkeId);
+    } catch (e) {
+      setBusy(false);
+      _navigateToHomeView(false);
+    }
   }
 
   void _manuelFetchLocationCity(String countryId) async {
-    final cities = await _fetchTimesService.getCities(countryId);
-    final city = await _bottomSheetService.showCustomSheet(
-      variant: BottomSheetType.location,
-      barrierDismissible: false,
-      title: "Şehir Seçiniz",
-      data: cities.map((e) => e.sehirAdiEn.capitalize()).toList(),
-    );
-    if (city == null) return;
-    final selection = cities
-        .firstWhere((e) => e.sehirAdiEn == (city.data as String).toLowerCase());
-    _manuelSelectUserLocation.city = selection.sehirAdiEn;
+    try {
+      final cities = await _fetchTimesService.getCities(countryId);
+      final city = await _bottomSheetService.showCustomSheet(
+        variant: BottomSheetType.location,
+        barrierDismissible: false,
+        title: "Şehir Seçiniz",
+        data: cities.map((e) => e.sehirAdiEn.capitalize()).toList(),
+      );
+      if (city == null) return;
+      final selection = cities
+          .firstWhere((e) => e.sehirAdiEn == (city.data as String).toLowerCase());
+      _manuelSelectUserLocation.city = selection.sehirAdiEn;
 
-    _manuelFetchLocationState(selection.sehirId);
+      _manuelFetchLocationState(selection.sehirId);
+    } catch (e) {
+      _navigateToHomeView(false);
+    }
   }
 
   void _manuelFetchLocationState(String sehirId) async {
-    final states = await _fetchTimesService.getStates(sehirId);
-    final state = await _bottomSheetService.showCustomSheet(
-      variant: BottomSheetType.location,
-      barrierDismissible: false,
-      title: "İlçe Seçiniz",
-      data: states.map((e) => e.ilceAdiEn.capitalize()).toList(),
-    );
-    if (state == null) return;
-    final selection = states
-        .firstWhere((e) => e.ilceAdiEn == (state.data as String).toLowerCase());
-    _manuelSelectUserLocation.state = selection.ilceAdiEn;
+    try {
+      final states = await _fetchTimesService.getStates(sehirId);
+      final state = await _bottomSheetService.showCustomSheet(
+        variant: BottomSheetType.location,
+        barrierDismissible: false,
+        title: "İlçe Seçiniz",
+        data: states.map((e) => e.ilceAdiEn.capitalize()).toList(),
+      );
+      if (state == null) return;
+      final selection = states
+          .firstWhere((e) => e.ilceAdiEn == (state.data as String).toLowerCase());
+      _manuelSelectUserLocation.state = selection.ilceAdiEn;
 
-    setBusy(true);
-    await _userSettingsService.setUserLocationSettings(
-        location: _manuelSelectUserLocation);
-    final fetchResult = await _fetchTimesService.fetchTimes();
-    setBusy(false);
-    fetchResult.fold((l) => _navigateToHomeView(false), (r) {});
+      setBusy(true);
+      await _userSettingsService.setUserLocationSettings(
+          location: _manuelSelectUserLocation);
+      try {
+        await _fetchTimesService.fetchTimes();
+      } catch (_) {}
+      setBusy(false);
+      _navigateToHomeView(false);
+    } catch (e) {
+      setBusy(false);
+      _navigateToHomeView(false);
+    }
   }
 
   void _navigateToHomeView(bool autoLocation) {
     _navigationService.replaceWithHomeView();
-    FirebaseAnalytics.instance.logEvent(
-        name: "location_success", parameters: {"autoLocation": autoLocation});
   }
 
-  // Eğer veritabanına daha önce vakitler kayıt edildiyse, ana sayfaya git
   void checkLocation({bool delayed = false}) async {
-    final hasPrayerTimes = await _prayerTimesService.hasPrayerTimes();
-    if (hasPrayerTimes) {
-      if (delayed) await Future.delayed(const Duration(seconds: 1));
-      _navigationService.replaceWithHomeView();
-    } else {
+    try {
+      final hasPrayerTimes = await _prayerTimesService.hasPrayerTimes();
+      if (hasPrayerTimes) {
+        if (delayed) await Future.delayed(const Duration(seconds: 1));
+        _navigationService.replaceWithHomeView();
+      } else {
+        FlutterNativeSplash.remove();
+      }
+    } catch (_) {
       FlutterNativeSplash.remove();
     }
   }
