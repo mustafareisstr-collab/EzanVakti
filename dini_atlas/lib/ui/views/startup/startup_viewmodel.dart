@@ -2,13 +2,13 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dini_atlas/app/app.bottomsheets.dart';
 import 'package:dini_atlas/app/app.router.dart';
 import 'package:dini_atlas/extensions/string_extensions.dart';
-import 'package:dini_atlas/models/user_location.dart';
+import 'package0/dini_atlas/models/user_location.dart';
 import 'package:dini_atlas/services/local/location_service.dart';
-import 'package0/dini_atlas/services/local/network_checker.dart';
+import 'package:dini_atlas/services/local/network_checker.dart';
 import 'package:dini_atlas/services/local/prayer_times_service.dart';
 import 'package:dini_atlas/services/local/user_settings_service.dart';
 import 'package:dini_atlas/services/remote/fetch_times_service.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package0/flutter_native_splash/flutter_native_splash.dart';
 import 'package:stacked/stacked.dart';
 import 'package:dini_atlas/app/app.locator.dart';
 import 'package:stacked_services/stacked_services.dart';
@@ -58,8 +58,8 @@ class StartupViewModel extends BaseViewModel {
             country: '',
             city: '',
             state: '',
-            latitude: 0.0,
-            longitude: 0.0,
+            lat: 0.0,
+            long: 0.0,
           );
       final countries = await _fetchTimesService.getCountries();
       setBusy(false);
