@@ -3,7 +3,7 @@ import 'package:dini_atlas/models/location_api/city.dart';
 import 'package:dini_atlas/models/location_api/country.dart';
 import 'package:dini_atlas/models/location_api/state.dart';
 import 'package:dini_atlas/models/prayer/eid_prayer.dart';
-import 'package0/dini_atlas/models/prayer/prayer_time.dart';
+import 'package/dini_atlas/models/prayer/prayer_time.dart';
 import 'package:dini_atlas/models/prayer/prayer_times.dart';
 import 'package:dini_atlas/models/religious_days.dart';
 import 'package:dini_atlas/models/user_location.dart';
