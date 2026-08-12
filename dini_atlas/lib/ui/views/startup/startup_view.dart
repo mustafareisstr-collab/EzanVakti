@@ -1,7 +1,7 @@
 import 'package:dini_atlas/services/local/location_service.dart';
 import 'package:dini_atlas/ui/common/constants/constants.dart';
 import 'package:dini_atlas/ui/common/ui_helpers.dart';
-import 'package:dini_atlas/ui/widgets/location_error_widget.dart';
+import 'package0:dini_atlas/ui/widgets/location_error_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:stacked/stacked.dart';
@@ -73,14 +73,14 @@ class StartupView extends StackedView<StartupViewModel> {
         _startupButton(
           context,
           text: "Konum Bul",
-          onTap: viewModel.getDatas,
+          onTap: () => viewModel.getDatas(),
         ),
         verticalSpaceMedium,
         _startupButton(
           context,
           text: "Manuel Seçim",
           color: kcPrimaryColor.withOpacity(.5),
-          onTap: viewModel.manuelFetchLocationCountry,
+          onTap: () => viewModel.manuelFetchLocationCountry(),
         ),
       ],
     );
@@ -141,24 +141,20 @@ class StartupView extends StackedView<StartupViewModel> {
     VoidCallback? onTap,
     required String text,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: borderRadiusLarge,
-      splashColor: kcPurpleColorDark,
-      child: Ink(
+      child: Container(
         decoration: BoxDecoration(
           color: color ?? kcPurpleColorMedium,
           borderRadius: borderRadiusLarge,
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-          child: Text(
-            text,
-            style: const TextStyle(
-              color: kcBackgroundColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 18,
-            ),
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: kcBackgroundColor,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
       ),
@@ -191,3 +187,4 @@ class StartupView extends StackedView<StartupViewModel> {
         viewModel.checkLocation(delayed: justLogo);
       });
 }
+
